@@ -7,8 +7,8 @@ import string
 from typing import List, Set, Optional
 import re
 
-nltk.download('stopwords', quiet=True)
-nltk.download('punkt', quiet=True)
+nltk.download('stopwords', quiet = True)
+nltk.download('punkt', quiet = True)
 nltk.download('averaged_perceptron_tagger', quiet=True)
 
 class MentalHealthExtractor:
