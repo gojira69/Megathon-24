@@ -1,2 +1,5 @@
 myVenv
 virtualvenv
+extract.txt
+sentences.txt
+helper.py
