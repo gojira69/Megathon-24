@@ -1,1 +1,1 @@
-# Megathon-24
+# Megathon-24: MyTak
