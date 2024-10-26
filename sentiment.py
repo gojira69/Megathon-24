@@ -198,8 +198,8 @@ def main():
     """Example usage of the analyzer with file processing."""
     analyzer = MentalHealthSentimentAnalyzer()
     
-    input_file = "sentences_only.txt"
-    expected_file = "polarities_only.txt"
+    input_file = "sentences_gpt.txt"
+    expected_file = "polarities_gpt.txt"
     output_file = "output.txt"
     
     accuracy = analyzer.evaluate_accuracy(

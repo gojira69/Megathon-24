@@ -10,5 +10,5 @@ Data
 .cache
 audio_features.log
 sentiment.txt
-polarities_only.txt
-sentences_only.txt
+polarities_gpt.txt
+sentences_gpt.txt
