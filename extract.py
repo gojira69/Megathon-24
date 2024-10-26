@@ -212,7 +212,7 @@ class MentalHealthExtractor:
         
         return []
 
-    def process_file(self, input_file: str = "sentences.txt", max_sentences: int = 1000) -> float:
+    def process_file(self, input_file: str = "sentences.txt") -> float:
         try:
             with open(input_file, "r") as file:
                 sentences = file.read().split("\n")
@@ -220,13 +220,11 @@ class MentalHealthExtractor:
                 expected_extracts = file.read().split("\n")
 
             correct_count = 0
-            total_count = min(max_sentences, len(sentences))
+            total_count = len(sentences)
             
             with open("output.txt", "w") as output_file:
                 for index, sentence in enumerate(sentences[:total_count]):
-                    if index >= max_sentences:
-                        break
-                    
+                   
                     extraction = self.extract_concern(sentence)
                     extracted_text = " ".join(extraction)
                     expected_text = expected_extracts[index]
@@ -238,7 +236,7 @@ class MentalHealthExtractor:
                         output_file.write(f"Extracted sentence: {extracted_text}\n")
                         output_file.write(f"Expected sentence: {expected_text}\n\n")
                     
-                    if (index + 1) % 50 == 0:
+                    if (index + 1) % 5000 == 0:
                         print(f"{(index + 1) / total_count * 100:.2f}% done", flush=True)
             
             accuracy = (correct_count / total_count) * 100
