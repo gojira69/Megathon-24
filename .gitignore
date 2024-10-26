@@ -6,3 +6,6 @@ helper.py
 output.txt
 output2.txt
 outputlmao.txt
+Data
+.cache
+audio_features.log
