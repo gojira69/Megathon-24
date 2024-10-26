@@ -23,7 +23,7 @@ class MentalHealthExtractor:
                     'stressed', 'stress', 'overwhelmed', 'hopeless', 'hopeful', 'afraid',
                     'scared', 'fearful', 'lonely', 'alone', 'tired', 'exhausted',
                     'confused', 'panic', 'angry', 'sad', 'happy', 'motivated', 'unmotivated',
-                    'low', 'excited', 'better', 'tensed'  # Added 'tensed' to states
+                    'low', 'excited', 'better', 'tensed'
                 },
                 'intensifiers': {
                     'very', 'extremely', 'constantly', 'really', 'quite', 'so', 'much',
@@ -61,44 +61,44 @@ class MentalHealthExtractor:
 
     def _create_pattern_rules(self) -> Dict[str, List[str]]:
         """
-        Create pattern rules for text extraction.
+        Create pattern rules for text extraction with improved feeling patterns.
         Returns a dictionary of pattern rules.
         """
         try:
-            # The (?:been\s+)? makes "been" optional in the patterns
             pattern_rules = {
-                'feeling_state': [
-                    r'(?:am|is|are|\'m|\'re|been)\s+feeling\s+(?:{})\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['intensifiers']),
-                        '|'.join(self.mental_health_indicators['states'])
+                'feeling_patterns': [
+                    # Basic feeling patterns
+                    r'(?:feeling|feel|feels?\s+like)\s+(?:{})?(?:{})'.format(
+                        r'(?:' + r'|'.join(self.mental_health_indicators['intensifiers']) + r')\s+',
+                        r'|'.join(self.mental_health_indicators['states'])
                     ),
-                    r'feeling\s+(?:{})\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['intensifiers']),
-                        '|'.join(self.mental_health_indicators['states'])
-                    ),
-                    r'(?:am|is|are|\'m|\'re|been)\s+feeling\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['states'])
-                    ),
-                    r'feeling\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['states'])
+                    # "I am/I'm feeling" patterns
+                    r'(?:I\s+am|I\'m|I\'ve\s+been|am|is|are|\'m|\'re|been)\s+(?:feeling|feel)\s+(?:{})?(?:{})'.format(
+                        r'(?:' + r'|'.join(self.mental_health_indicators['intensifiers']) + r')\s+',
+                        r'|'.join(self.mental_health_indicators['states'])
                     )
                 ],
-                'emotion_state': [
-                    r'(?:{})\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['emotions']),
-                        '|'.join(self.mental_health_indicators['states'])
+                'feeling_state_context': [
+                    # Patterns for "feeling [intensifier] [state] about [context]"
+                    r'(?:am|is|are|\'m|\'re|been|feels\s+like\s+(?:I|we|he|she|they)(?:\'m|\'re|\'s)?)\s+(?:feeling\s+)?(?:{})(?:{})\s+(?:about\s+(?:{}))?'.format(
+                        r'(?:' + r'|'.join(self.mental_health_indicators['intensifiers']) + r')\s+',
+                        r'|'.join(self.mental_health_indicators['states']),
+                        r'|'.join([context for context in self.mental_health_indicators['contexts']])
                     )
                 ],
-                'intensified_state': [
-                    r'(?:{})\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['intensifiers']),
-                        '|'.join(self.mental_health_indicators['states'])
+                'state_context': [
+                    # Direct patterns for "[state] about [context]"
+                    r'(?:{})\s+about\s+(?:{})'.format(
+                        r'|'.join(self.mental_health_indicators['states']),
+                        r'|'.join([context for context in self.mental_health_indicators['contexts']])
                     )
                 ],
-                'context_state': [
-                    r'(?:{})\s+(?:about|regarding|concerning)\s+(?:{})'.format(
-                        '|'.join(self.mental_health_indicators['states']),
-                        '|'.join([context for context in self.mental_health_indicators['contexts']])
+                'intensified_state_context': [
+                    # Patterns for "[intensifier] [state] about [context]"
+                    r'(?:{})\s+(?:{})\s+about\s+(?:{})'.format(
+                        r'|'.join(self.mental_health_indicators['intensifiers']),
+                        r'|'.join(self.mental_health_indicators['states']),
+                        r'|'.join([context for context in self.mental_health_indicators['contexts']])
                     )
                 ]
             }
@@ -108,6 +108,7 @@ class MentalHealthExtractor:
         except Exception as e:
             print(f"Error creating pattern rules: {str(e)}")
             return {}
+
 
     def _get_stopwords(self) -> Set[str]:
         """
@@ -203,7 +204,7 @@ class MentalHealthExtractor:
             return set()
 
     def extract_concern(self, sentence: str) -> List[str]:
-        """Extract mental health concerns from a sentence with pattern matching."""
+        """Extract mental health concerns from a sentence with improved pattern matching."""
         try:
             processed_text = sentence.lower()
             
@@ -218,90 +219,66 @@ class MentalHealthExtractor:
                     if pattern in processed_text:
                         return pattern.split()
             
-            # Check for feeling patterns first
-            for pattern in self.pattern_rules['feeling_state']:
-                matches = pattern.search(processed_text)
-                if matches:
-                    match_text = matches.group(0)
-                    # Clean up any leading/trailing whitespace and split into words
-                    words = [word for word in match_text.split() if word]
-                    if 'been' in words:
-                        words.remove('been')
-                    if any(word in ['am', 'is', 'are', "'m", "'re"] for word in words):
-                        words = [word for word in words if word not in ['am', 'is', 'are', "'m", "'re"]]
-                    return words
+            # Check feeling patterns first
+            for pattern in self.pattern_rules['feeling_patterns']:
+                match = pattern.search(processed_text)
+                if match:
+                    match_text = match.group(0)
+                    words = match_text.split()
+                    
+                    # Process the matched words
+                    result = []
+                    feeling_found = False
+                    for i, word in enumerate(words):
+                        # Always include 'feeling' if it's present
+                        if word in {'feeling', 'feel', 'feels'}:
+                            result.append('feeling')
+                            feeling_found = True
+                            continue
+                            
+                        # Include intensifiers and states
+                        if (word in self.mental_health_indicators['intensifiers'] or
+                            word in self.mental_health_indicators['states']):
+                            result.append(word)
+                    
+                    # Ensure consistent output format
+                    if result and not feeling_found and 'feeling' in processed_text:
+                        result.insert(0, 'feeling')
+                    
+                    if result:
+                        return result
             
-            # If no feeling pattern matches, check other patterns
-            words = word_tokenize(processed_text)
-            
-            # Fall back to word-by-word analysis
-            for i, word in enumerate(words):
-                if word not in self.stopwords:
-                    # Check if word is a state or synonym of a state
-                    is_state, matching_state = self._find_matching_state(word)
-                    if is_state:
-                        # Look for intensifiers
-                        for j in range(max(0, i-1), i):
-                            if words[j] in self.mental_health_indicators['intensifiers']:
-                                return [words[j], matching_state]
+            # Check other pattern types if no feeling pattern matched
+            for pattern_type in ['feeling_state_context', 'state_context', 'intensified_state_context']:
+                for pattern in self.pattern_rules[pattern_type]:
+                    match = pattern.search(processed_text)
+                    if match:
+                        match_text = match.group(0)
+                        words = [word.strip() for word in match_text.split() if word.strip()]
                         
-                        # Look for context
-                        context_window = words[max(0, i-2):min(len(words), i+3)]
-                        for context_word in context_window:
-                            if context_word not in self.stopwords:
-                                has_context, context_type, matched_context = self._find_matching_context(context_word)
-                                if has_context:
-                                    return [matching_state, 'about', matched_context]
+                        # Remove auxiliary verbs and other unnecessary words
+                        words = [w for w in words if w not in {'am', 'is', 'are', "'m", "'re", 'been', 
+                                                             'feels', 'feel', 'i', 'like'}]
                         
-                        return [matching_state]
+                        # Process matched words
+                        result = []
+                        for word in words:
+                            if (word in self.mental_health_indicators['states'] or
+                                word in self.mental_health_indicators['intensifiers'] or
+                                word == 'about' or
+                                any(word == context for context in self.mental_health_indicators['contexts'])):
+                                result.append(word)
+                        
+                        if result:
+                            # Add 'feeling' if it's in the original text
+                            if 'feeling' in processed_text and not result[0] == 'feeling':
+                                result.insert(0, 'feeling')
+                            return result
             
             return []
         except Exception as e:
             print(f"Error extracting concerns: {str(e)}")
             return []
-
-    def _find_matching_state(self, word: str) -> Tuple[bool, str]:
-        """Check if a word or its synonyms match any mental health state."""
-        try:
-            if word in self.mental_health_indicators['states']:
-                return True, word
-            
-            if word in self.synonym_mapping:
-                original_word = self.synonym_mapping[word]
-                if original_word in self.mental_health_indicators['states']:
-                    return True, original_word
-            
-            word_synonyms = self._get_synonyms(word)
-            for state in self.mental_health_indicators['states']:
-                state_synonyms = self._get_synonyms(state)
-                if word in state_synonyms or any(syn in state_synonyms for syn in word_synonyms):
-                    return True, state
-            
-            return False, ''
-        except Exception as e:
-            print(f"Error finding matching state: {str(e)}")
-            return False, ''
-
-    def _find_matching_context(self, word: str) -> Tuple[bool, str, str]:
-        """Check if a word or its synonyms match any context or context detail."""
-        try:
-            for context, details in self.mental_health_indicators['contexts'].items():
-                if word == context or word in details:
-                    return True, context, word
-                
-                context_synonyms = self._get_synonyms(context)
-                if word in context_synonyms:
-                    return True, context, context
-                    
-                for detail in details:
-                    detail_synonyms = self._get_synonyms(detail)
-                    if word in detail_synonyms:
-                        return True, context, detail
-                        
-            return False, '', ''
-        except Exception as e:
-            print(f"Error finding matching context: {str(e)}")
-            return False, '', ''
 
     def _initialize_synonym_cache(self):
         """Pre-calculate synonyms for all known states and contexts."""
