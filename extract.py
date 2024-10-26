@@ -15,7 +15,7 @@ nltk.download('omw-1.4', quiet=True)
 class MentalHealthExtractor:
     def __init__(self):
         try:
-            # Initialize mental health indicators
+            # Initialize base mental health indicators
             self.mental_health_indicators = {
                 'emotions': {'feeling', 'feel', 'felt', 'feels'},
                 'states': {
@@ -23,7 +23,8 @@ class MentalHealthExtractor:
                     'stressed', 'stress', 'overwhelmed', 'hopeless', 'hopeful', 'afraid',
                     'scared', 'fearful', 'lonely', 'alone', 'tired', 'exhausted',
                     'confused', 'panic', 'angry', 'sad', 'happy', 'motivated', 'unmotivated',
-                    'low', 'excited', 'better', 'tensed'
+                    'low', 'excited', 'better', 'tensed', 'perturbed', 'disturbed', 'upset',
+                    'distressed', 'troubled', 'concerned', 'uneasy', 'agitated'
                 },
                 'intensifiers': {
                     'very', 'extremely', 'constantly', 'really', 'quite', 'so', 'much',
@@ -32,7 +33,7 @@ class MentalHealthExtractor:
                 },
                 'contexts': {
                     'job': ['prospects', 'situation', 'search', 'performance', 'security'],
-                    'health': ['condition', 'issues', 'problems', 'symptoms'],
+                    'health': ['condition', 'issues', 'problems', 'symptoms', 'wellness'],
                     'future': ['career', 'plans', 'opportunities', 'prospects'],
                     'work': ['environment', 'situation', 'conditions', 'pressure'],
                     'family': ['situation', 'issues', 'relationships', 'matters'],
@@ -49,11 +50,15 @@ class MentalHealthExtractor:
                     'sleeping': ["can't sleep", 'not sleeping', 'sleeping poorly']
                 }
             }
-            # Initialize other attributes
+            
             self.synonym_cache = {}
             self.synonym_mapping = {}
+            self.expanded_states = set()
+            self.expanded_contexts = {}
             self.stopwords = self._get_stopwords()
             self._initialize_synonym_cache()
+            self._expand_mental_states()
+            self._expand_contexts()
             self.pattern_rules = self._create_pattern_rules()
         except Exception as e:
             print(f"Error during initialization: {str(e)}")
@@ -109,6 +114,43 @@ class MentalHealthExtractor:
             print(f"Error creating pattern rules: {str(e)}")
             return {}
 
+    def _expand_mental_states(self):
+        """Expand mental states using WordNet synonyms."""
+        try:
+            for state in self.mental_health_indicators['states']:
+                # Get direct synonyms
+                synonyms = self._get_synonyms(state)
+                # Get related adjectives
+                for syn in wordnet.synsets(state):
+                    if syn.pos() in ['a', 's', 'v']:  # adjectives and verbs
+                        for lemma in syn.lemmas():
+                            synonyms.add(lemma.name().lower())
+                            # Add antonyms if relevant
+                            for antonym in lemma.antonyms():
+                                if antonym.name().lower() in self.mental_health_indicators['states']:
+                                    synonyms.add(antonym.name().lower())
+                
+                self.expanded_states.update(synonyms)
+            
+            # Update states with expanded set
+            self.mental_health_indicators['states'].update(self.expanded_states)
+        except Exception as e:
+            print(f"Error expanding mental states: {str(e)}")
+
+    def _expand_contexts(self):
+        """Expand contexts using WordNet synonyms."""
+        try:
+            for context, terms in self.mental_health_indicators['contexts'].items():
+                expanded_terms = set(terms)
+                for term in terms:
+                    synonyms = self._get_synonyms(term)
+                    expanded_terms.update(synonyms)
+                self.expanded_contexts[context] = list(expanded_terms)
+            
+            # Update contexts with expanded terms
+            self.mental_health_indicators['contexts'] = self.expanded_contexts
+        except Exception as e:
+            print(f"Error expanding contexts: {str(e)}")
 
     def _get_stopwords(self) -> Set[str]:
         """
