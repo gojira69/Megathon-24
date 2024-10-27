@@ -37,7 +37,8 @@ class MentalHealthExtractor:
                     'future': ['career', 'plans', 'opportunities', 'prospects'],
                     'work': ['environment', 'situation', 'conditions', 'pressure'],
                     'family': ['situation', 'issues', 'relationships', 'matters'],
-                    'financial': ['situation', 'problems', 'issues', 'status']
+                    'financial': ['situation', 'problems', 'issues', 'status'],
+                    'kill': ['myself']
                 },
                 'keep_phrases': {
                     'feeling hopeful', 'feeling better', "can't sleep well",
