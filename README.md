@@ -1,7 +1,5 @@
 # Megathon-24: MyTak
 
-# Megathon-24: MyTak
-
 # Mental Health Support Platform
 
 A Flask-based web application for mental health professionals to manage patient data, process therapy sessions, and analyze mental health indicators. This platform combines audio processing, natural language processing, and mental health analysis tools.
