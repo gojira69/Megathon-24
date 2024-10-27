@@ -245,7 +245,24 @@ class MentalHealthExtractor:
             print(f"Error getting synonyms for {word}: {str(e)}")
             return set()
 
-    def extract_concern(self, sentence: str) -> List[str]:
+    def extract_concern(self, sentence: str) -> str:
+        """
+        Extract mental health concerns from a sentence and return as a string.
+        
+        Args:
+            sentence (str): Input sentence to analyze
+            
+        Returns:
+            str: Extracted mental health concern or empty string if none found
+        """
+        try:
+            extracted_words = self._extract_concern_list(sentence)
+            return " ".join(extracted_words) if extracted_words else ""
+        except Exception as e:
+            print(f"Error extracting concerns: {str(e)}")
+            return ""
+
+    def _extract_concern_list(self, sentence: str) -> List[str]:
         """Extract mental health concerns from a sentence with improved pattern matching."""
         try:
             processed_text = sentence.lower()
@@ -271,26 +288,21 @@ class MentalHealthExtractor:
                     # Process the matched words
                     result = []
                     feeling_found = False
-                    for i, word in enumerate(words):
-                        # Always include 'feeling' if it's present
+                    for word in words:
                         if word in {'feeling', 'feel', 'feels'}:
                             result.append('feeling')
                             feeling_found = True
-                            continue
-                            
-                        # Include intensifiers and states
-                        if (word in self.mental_health_indicators['intensifiers'] or
-                            word in self.mental_health_indicators['states']):
+                        elif (word in self.mental_health_indicators['intensifiers'] or
+                              word in self.mental_health_indicators['states']):
                             result.append(word)
                     
-                    # Ensure consistent output format
                     if result and not feeling_found and 'feeling' in processed_text:
                         result.insert(0, 'feeling')
                     
                     if result:
                         return result
             
-            # Check other pattern types if no feeling pattern matched
+            # Check other pattern types
             for pattern_type in ['feeling_state_context', 'state_context', 'intensified_state_context']:
                 for pattern in self.pattern_rules[pattern_type]:
                     match = pattern.search(processed_text)
@@ -298,11 +310,9 @@ class MentalHealthExtractor:
                         match_text = match.group(0)
                         words = [word.strip() for word in match_text.split() if word.strip()]
                         
-                        # Remove auxiliary verbs and other unnecessary words
                         words = [w for w in words if w not in {'am', 'is', 'are', "'m", "'re", 'been', 
                                                              'feels', 'feel', 'i', 'like'}]
                         
-                        # Process matched words
                         result = []
                         for word in words:
                             if (word in self.mental_health_indicators['states'] or
@@ -312,7 +322,6 @@ class MentalHealthExtractor:
                                 result.append(word)
                         
                         if result:
-                            # Add 'feeling' if it's in the original text
                             if 'feeling' in processed_text and not result[0] == 'feeling':
                                 result.insert(0, 'feeling')
                             return result
@@ -377,9 +386,22 @@ class MentalHealthExtractor:
 def main():
     try:
         extractor = MentalHealthExtractor()
-        extractor.process_file()
+        print("Mental Health Concern Extractor")
+        print("Enter a sentence to analyze (or 'quit' to exit):")
+        
+        while True:
+            user_input = input("> ").strip()
+            if user_input.lower() == 'quit':
+                break
+            
+            result = extractor.extract_concern(user_input)
+            if result:
+                print(f"Extracted concern: {result}")
+            else:
+                print("No mental health concerns detected.")
+                
     except Exception as e:
-        print(f"Error in main: {str(e)}")
+        print(f"Error: {str(e)}")
 
 if __name__ == "__main__":
     main()
