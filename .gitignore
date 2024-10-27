@@ -13,3 +13,4 @@ sentiment.txt
 polarities_gpt.txt
 sentences_gpt.txt
 Uploads
+synthetic_sentiment_dataset_500.csv

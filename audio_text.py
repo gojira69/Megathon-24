@@ -3,6 +3,7 @@ import librosa
 import pandas as pd
 from transformers import pipeline
 from pydub import AudioSegment
+import sys
 
 # Set up ASR pipeline for transcription
 asr_pipeline = pipeline("automatic-speech-recognition", model="openai/whisper-medium", device=-1)
@@ -26,9 +27,19 @@ def transcribe_audio_file(mp3_file_path, output_txt_path):
         f.write(transcription)
     print(f"Transcription saved to {output_txt_path}")
 
-# Path to your MP3 file and output path for text file
-mp3_file_path = "audio.mp3"
-output_txt_path = "transcription.txt"
+def main():
+    username = sys.argv[1]
+    data_folder = "Data"
+    mp3_file_path = os.path.join(data_folder, username, "audio.mp3")  # Adjust the file path as needed
+    output_txt_path = os.path.join(data_folder, username, "therapists.txt")  # Output file path
 
-# Transcribe the single audio file
-transcribe_audio_file(mp3_file_path, output_txt_path)
+    # Check if the audio file exists
+    if not os.path.exists(mp3_file_path):
+        print(f"Error: The file {mp3_file_path} does not exist.")
+        return
+
+    # Transcribe the audio file
+    transcribe_audio_file(mp3_file_path, output_txt_path)
+
+if __name__ == "__main__":
+    main()

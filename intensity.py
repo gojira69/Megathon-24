@@ -1,4 +1,6 @@
 import re
+import sys
+import os
 
 # Quantifiers dictionary with intensity scores
 quantifiers = {
@@ -31,7 +33,23 @@ def calculate_intensity(sentence: str) -> int:
 def get_intensity(sentence: str) -> int:
     return calculate_intensity(sentence)
 
-# Example usage
-sentence = "I'm feeling very anxious about my health."
-intensity = get_intensity(sentence)
-print(f"Intensity Score: {intensity}")
+def main():
+    user_name = sys.argv[1]
+    input_file = os.path.join("Data", user_name, "therapist_notes.txt")
+
+    output_file = os.path.join("Data", user_name, "intensity.txt")
+
+    try:
+        with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+            for line in infile:
+                sentence = line.strip()
+                if sentence:  # Check if the line is not empty
+                    intensity = get_intensity(sentence)
+                    output_message = f"Sentence: '{sentence}' | Intensity Score: {intensity}\n"
+                    print(output_message.strip())  # Print to console
+                    outfile.write(output_message)  # Write to file
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+if __name__ == "__main__":
+    main()

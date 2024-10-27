@@ -43,13 +43,54 @@ def upload():
     if music_file:
         music_file.save(os.path.join(upload_folder, music_file.filename))
 
-    # Run the subprocess to generate CSV files
     try:
         subprocess.run(['python3', 'script.py', patient_name], check=True)
         print('done bro')
     except subprocess.CalledProcessError as e:
         print(f"An error occurred while running the subprocess: {e}")
 
+
+    if not os.path.exists(f"Data/{patient_name}/therapist_notes.txt"):
+        try:
+            subprocess.run(['python3', 'audio_text.py', patient_name], check=True)
+            print('audio to text done bro')
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the subprocess: {e}")
+
+    if os.path.exists(f'Data/{patient_name}/therapist_notes.txt'):
+        try:
+            subprocess.run(['python3', 'polarity.py', patient_name], check=True)
+            print('polairty done bro')
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the subprocess: {e}")
+
+    if os.path.exists(f'Data/{patient_name}/therapist_notes.txt'):
+        try:
+            subprocess.run(['python3', 'extract.py', patient_name], check=True)
+            print('extraction done bro')
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the subprocess: {e}")
+      
+    if os.path.exists(f'Data/{patient_name}/extracted_concern.txt'):
+        try:
+            subprocess.run(['python3', 'concern_classifier.py', patient_name], check=True)
+            print('classification done bro')
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the subprocess: {e}")
+    
+    if os.path.exists(f'Data/{patient_name}/therapist_notes.txt'):
+        try:
+            subprocess.run(['python3', 'intensity.py', patient_name], check=True)
+            print('intensity done bro')
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the subprocess: {e}")
+    
+    if os.path.exists(f'Data/{patient_name}/user_history.csv'):
+        try:
+            subprocess.run(['python3', 'temporal_shifts.py', patient_name], check=True)
+            print('temporal_shifts done bro')
+        except subprocess.CalledProcessError as e:
+            print(f"An error occurred while running the subprocess: {e}")
 
     return redirect(url_for('dashboard', name=patient_name))  # Redirect back to the dashboard
 

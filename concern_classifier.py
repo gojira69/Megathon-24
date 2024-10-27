@@ -1,4 +1,6 @@
+import sys
 from transformers import pipeline
+import os
 
 # Initialize the zero-shot classifier and define the categories
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
@@ -18,7 +20,23 @@ def classify_concern(concern):
     
     return max_category, max_score
 
-# Example usage
-user_concern = "I'm feeling extremely anxious about my job security and future prospects."
-category, score = classify_concern(user_concern)
-print(f"Predicted Category: {category} (Score: {score:.2f})")
+def main():
+    input_file = sys.argv[1]
+
+    input_file = os.path.join("Data", input_file, "extracted_concern.txt")
+    output_file = os.path.join("Data", input_file, "predicted_category.txt")
+
+    try:
+        with open(input_file, 'r') as infile, open(output_file, 'w') as outfile:
+            for line in infile:
+                user_concern = line.strip()
+                if user_concern:  # Check if the line is not empty
+                    category, score = classify_concern(user_concern)
+                    output_message = f"Concern: '{user_concern}' | Predicted Category: {category} (Score: {score:.2f})\n"
+                    print(output_message.strip())  # Print to console
+                    outfile.write(output_message)  # Write to file
+    except Exception as e:
+        print(f"Error: {str(e)}")
+
+if __name__ == "__main__":
+    main()

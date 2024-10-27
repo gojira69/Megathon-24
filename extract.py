@@ -5,6 +5,25 @@ import contractions
 import string
 from typing import List, Set, Optional, Dict, Tuple
 import re
+import sys
+import os
+
+user_name = sys.argv[1]
+
+print(user_name)
+
+file_path = os.path.join("Data", user_name, "therapist_notes.txt")
+output_file_path = os.path.join("Data", user_name, "extracted_concern.txt")
+
+try:
+    with open(file_path, 'r') as file:
+        user_input = file.read()  # Read the entire file content into a string
+except FileNotFoundError:
+    print(f"The file {file_path} does not exist.")
+    sys.exit(1)  # Exit if the file is not found
+except Exception as e:
+    print(f"An error occurred while reading the file: {e}")
+    sys.exit(1)  # Exit if any other error occurs
 
 nltk.download('stopwords', quiet=True)
 nltk.download('punkt', quiet=True)
@@ -386,20 +405,23 @@ class MentalHealthExtractor:
 def main():
     try:
         extractor = MentalHealthExtractor()
-        print("Mental Health Concern Extractor")
-        print("Enter a sentence to analyze (or 'quit' to exit):")
         
-        while True:
-            user_input = input("> ").strip()
-            if user_input.lower() == 'quit':
-                break
-            
-            result = extractor.extract_concern(user_input)
-            if result:
-                print(f"Extracted concern: {result}")
-            else:
-                print("No mental health concerns detected.")
+        with open(output_file_path, 'w') as output_file:  # Open the file for writing
+            while True:
+                user_input = input("> ").strip()
+                if user_input.lower() == 'quit':
+                    break
                 
+                result = extractor.extract_concern(user_input)
+                if result:
+                    output_message = f"User Input: {user_input}\nExtracted concern: {result}\n"
+                    print(output_message)  # Print to console
+                    output_file.write(output_message)  # Write to file
+                else:
+                    output_message = f"User Input: {user_input}\nNo mental health concerns detected.\n"
+                    print(output_message)  # Print to console
+                    output_file.write(output_message)  # Write to file
+
     except Exception as e:
         print(f"Error: {str(e)}")
 

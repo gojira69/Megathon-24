@@ -3,6 +3,7 @@ from collections import Counter
 import pandas as pd
 import matplotlib.pyplot as plt
 import sys
+import os
 
 # Initialize the zero-shot classifier and define the categories
 classifier = pipeline("zero-shot-classification", model="facebook/bart-large-mnli")
@@ -30,9 +31,11 @@ def predict_category(concern):
     category_scores = {label: score for label, score in zip(result['labels'], result['scores'])}
     return category_scores
 
+user_name = sys.argv[1]
+
 # Read sentences from CSV file
-input_file = "input_sentences.csv"  # Replace with your input file path
-output_file = "output_analysis.txt"
+input_file = os.path.join("Data", user_name, "user_history.csv")  # Replace with your input file path
+output_file = os.path.join("Data", user_name, "data_analysis.txt")
 df_input = pd.read_csv(input_file)
 
 # Daily analysis
@@ -71,7 +74,7 @@ plt.xlabel('Day')
 plt.ylabel('Emotional Score')
 plt.title('Daily Emotional Score (First Week)')
 plt.grid(True)
-plt.savefig("daily_emotional_score_first_week.png")  # Save the plot as an image file
+plt.savefig(f"Data/{user_name}/daily_emotional_score_first_week.png")  # Save the plot as an image file
 
 # Plot Weekly Emotional Score (most frequent score for each week)
 weekly_emotional_score = []
@@ -93,7 +96,7 @@ plt.xlabel('Week')
 plt.ylabel('Most Frequent Emotional Score')
 plt.title('Weekly Emotional Score')
 plt.grid(True)
-plt.savefig("weekly_emotional_score.png")  # Save the plot as an image file
+plt.savefig(f"Data/{user_name}/weekly_emotional_score.png")  # Save the plot as an image file
 
 # Plot Monthly Emotional Score (most frequent score for each month)
 monthly_emotional_score = []
@@ -115,7 +118,7 @@ plt.xlabel('Month')
 plt.ylabel('Most Frequent Emotional Score')
 plt.title('Monthly Emotional Score')
 plt.grid(True)
-plt.savefig("monthly_emotional_score.png")  # Save the plot as an image file
+plt.savefig(f"Data/{user_name}/monthly_emotional_score.png")  # Save the plot as an image file
 
 # Print and save daily analysis for the first week
 with open(output_file, "w") as f:
